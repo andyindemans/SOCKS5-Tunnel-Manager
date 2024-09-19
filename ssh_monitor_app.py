@@ -14,7 +14,7 @@ from resources.ui.server_dialog import AddServerDialog
 load_dotenv()
 
 
-class ServerMonitorApp(QWidget):
+class SshMonitorApp(QWidget):
     def __init__(self):
         super().__init__()
         self.add_server_button = None
@@ -140,7 +140,7 @@ class ServerMonitorApp(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = ServerMonitorApp()
+    window = SshMonitorApp()
 
     # Set up dark theme
     palette = QPalette()
