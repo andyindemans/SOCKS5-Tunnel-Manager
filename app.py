@@ -1,63 +1,21 @@
 import sys
 import subprocess
-import socket
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QFrame, QVBoxLayout, QHBoxLayout
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QColor, QPalette
 from dotenv import load_dotenv
-import os
+
+from resources.core.ssh_management import create_ssh_tunnel, is_port_open, load_servers
+from resources.ui.status_indicator import StatusIndicator
+from resources.ui.server_dialog import AddServerDialog
 
 load_dotenv()
 
 
-def load_servers():
-    servers = []
-    i = 1
-    while True:
-        host = os.getenv(f'SERVER_{i}_HOST')
-        port = os.getenv(f'SERVER_{i}_PORT')
-        display_name = os.getenv(f'SERVER_{i}_DISPLAY_NAME', "").strip()
-        if not host or not port:
-            break
-        if not display_name:
-            display_name = host
-        servers.append({"host": host, "port": int(port), "display_name": display_name})
-        i += 1
-    return servers
-
-
-def create_ssh_tunnel(server):
-    command = [
-        "ssh",
-        "-D", str(server["port"]),
-        "-o", "ServerAliveInterval=60",
-        "-o", "ServerAliveCountMax=5",
-        server["host"]
-    ]
-    subprocess.Popen(command)
-
-
-def is_port_open(port):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    result = sock.connect_ex(('localhost', port))
-    sock.close()
-    return result == 0
-
-
-class StatusIndicator(QFrame):
+class ServerMonitorApp(QWidget):
     def __init__(self):
         super().__init__()
-        self.setFixedSize(15, 15)
-        self.setStyleSheet("border-radius: 7px; background-color: yellow;")
-
-    def set_status(self, status):
-        color = {"open": "green", "closed": "red", "waiting": "yellow"}.get(status, "yellow")
-        self.setStyleSheet(f"border-radius: 7px; background-color: {color};")
-
-
-class TunnelApp(QWidget):
-    def __init__(self):
-        super().__init__()
+        self.add_server_button = None
         self.layout = None
         self.servers = load_servers()
         self.status_widgets = {}  # Store widgets for each server
@@ -70,6 +28,9 @@ class TunnelApp(QWidget):
         self.resize(800, 600)
         self.layout = QVBoxLayout()
         self.layout.setContentsMargins(20, 20, 20, 20)
+        self.add_server_button = QPushButton("Manage Servers")
+        self.add_server_button.clicked.connect(self.show_add_server_dialog)
+        self.layout.addWidget(self.add_server_button)
         for server in self.servers:
             server_widget, status_indicator, status_label = self.create_server_widget(server)
             self.layout.addWidget(server_widget)
@@ -148,19 +109,45 @@ class TunnelApp(QWidget):
             subprocess.call(['pkill', '-f', f'ssh.*{server["host"]}'])
         event.accept()
 
+    def fetch_servers(self):
+        load_dotenv()
+        self.servers = load_servers()
+        self.update_server_ui()
 
-def main():
-    app = QApplication(sys.argv)
-    dark_palette = QPalette()
-    dark_palette.setColor(QPalette.Window, QColor(40, 40, 40))
-    dark_palette.setColor(QPalette.WindowText, Qt.white)
-    dark_palette.setColor(QPalette.Button, QColor(60, 60, 60))
-    dark_palette.setColor(QPalette.ButtonText, Qt.white)
-    app.setPalette(dark_palette)
-    ex = TunnelApp()
-    ex.show()
-    sys.exit(app.exec_())
+    def update_server_ui(self):
+        # Clear the grid before adding new servers
+        for i in reversed(range(self.layout.count())):
+            widget = self.layout.itemAt(i).widget()
+            if widget is not None:
+                widget.deleteLater()
+
+        self.add_server_button = QPushButton("Manage Servers")
+        self.add_server_button.clicked.connect(self.show_add_server_dialog)
+        self.layout.addWidget(self.add_server_button)
+        for server in self.servers:
+            server_widget, status_indicator, status_label = self.create_server_widget(server)
+            self.layout.addWidget(server_widget)
+            self.status_widgets[server["host"]] = {"indicator": status_indicator, "label": status_label}
+
+    def show_add_server_dialog(self):
+        dialog = AddServerDialog(self)
+        if dialog.exec_():
+            self.fetch_servers()
 
 
 if __name__ == '__main__':
-    main()
+    app = QApplication(sys.argv)
+    window = ServerMonitorApp()
+
+    # Set up dark theme
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor("#282828"))
+    palette.setColor(QPalette.Button, QColor("#3c3c3c"))
+    palette.setColor(QPalette.ButtonText, Qt.white)
+    palette.setColor(QPalette.WindowText, Qt.white)
+    palette.setColor(QPalette.Base, QColor("#3c3c3c"))
+    palette.setColor(QPalette.Text, Qt.white)
+    app.setPalette(palette)
+
+    window.show()
+    sys.exit(app.exec_())
