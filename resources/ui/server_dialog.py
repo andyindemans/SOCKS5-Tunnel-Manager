@@ -10,7 +10,7 @@ class AddServerDialog(QDialog):
         super(AddServerDialog, self).__init__(parent)
         self.setWindowTitle("Add New Server")
         self.layout = QVBoxLayout()
-        self.resize(300, 200)
+        self.resize(400, 300)
 
         self.host_input = QLineEdit(self)
         self.host_input.setPlaceholderText("Host")

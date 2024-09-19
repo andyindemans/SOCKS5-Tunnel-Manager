@@ -128,6 +128,7 @@ class ServerMonitorApp(QWidget):
             server_widget, status_indicator, status_label = self.create_server_widget(server)
             self.layout.addWidget(server_widget)
             self.status_widgets[server["host"]] = {"indicator": status_indicator, "label": status_label}
+            create_ssh_tunnel(server)
 
     def show_add_server_dialog(self):
         dialog = AddServerDialog(self)
