@@ -98,12 +98,22 @@ class TunnelApp(QWidget):
 
         button = QPushButton("Restart Tunnel")
         button.setStyleSheet("""
-            background-color: #3c3c3c; 
-            color: white; 
-            border: 2px solid #3c3c50; 
-            border-radius: 5px;
-            padding: 5px 10px;
-        """)
+                    QPushButton {
+                        background-color: #282828; 
+                        color: white; 
+                        border: 2px solid #3c3c50; 
+                        border-radius: 5px;
+                        padding: 5px 10px;
+                    }
+                    QPushButton:hover {
+                        background-color: #505050;
+                        border: 2px solid #707070;
+                    }
+                    QPushButton:pressed {
+                        background-color: #3c3c50;
+                        border: 2px solid #505050;
+                    }
+                """)
         button.clicked.connect(lambda _, s=server: self.restart_tunnel(s))
         server_layout.addWidget(button)
 
