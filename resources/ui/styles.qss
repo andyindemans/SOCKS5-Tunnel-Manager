@@ -30,3 +30,11 @@ QPushButton:pressed {
 QLabel {
     color: white;
 }
+
+QLineEdit {
+    background-color: #3c3c3c;
+    color: grey;
+    border: 2px solid #3c3c50;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
