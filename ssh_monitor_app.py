@@ -26,17 +26,24 @@ class SshMonitorApp(QWidget):
 
     def init_ui(self):
         self.setWindowTitle('SSH Tunnel Manager')
-        self.setStyleSheet("background-color: #282828; color: white;")
         self.resize(800, 600)
+
+        # Apply stylesheet from external file
+        with open("resources/ui/styles.qss", "r") as file:
+            self.setStyleSheet(file.read())
+
         self.layout = QVBoxLayout()
         self.layout.setContentsMargins(20, 20, 20, 20)
+
         self.add_server_button = QPushButton("Manage Servers")
         self.add_server_button.clicked.connect(self.show_add_server_dialog)
         self.layout.addWidget(self.add_server_button)
+
         for server in self.servers:
             server_widget, status_indicator, status_label = self.create_server_widget(server)
             self.layout.addWidget(server_widget)
             self.status_widgets[server["host"]] = {"indicator": status_indicator, "label": status_label}
+
         self.setLayout(self.layout)
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_statuses)
@@ -44,39 +51,19 @@ class SshMonitorApp(QWidget):
 
     def create_server_widget(self, server):
         server_frame = QFrame()
-        server_frame.setFrameShape(QFrame.StyledPanel)
-        server_frame.setStyleSheet("background-color: #3c3c3c; border-radius: 10px;")
         server_layout = QHBoxLayout(server_frame)
         server_layout.setContentsMargins(10, 10, 10, 10)
+
         server_label = QLabel(f"Server: {server['display_name']}")
-        server_label.setStyleSheet("color: white;")
         server_layout.addWidget(server_label)
 
         status_indicator = StatusIndicator()
         server_layout.addWidget(status_indicator)
 
         status_label = QLabel("Checking...")
-        status_label.setStyleSheet("color: white;")
         server_layout.addWidget(status_label)
 
         button = QPushButton("Restart Tunnel")
-        button.setStyleSheet("""
-                    QPushButton {
-                        background-color: #282828; 
-                        color: white; 
-                        border: 2px solid #3c3c50; 
-                        border-radius: 5px;
-                        padding: 5px 10px;
-                    }
-                    QPushButton:hover {
-                        background-color: #505050;
-                        border: 2px solid #707070;
-                    }
-                    QPushButton:pressed {
-                        background-color: #3c3c50;
-                        border: 2px solid #505050;
-                    }
-                """)
         button.clicked.connect(lambda _, s=server: self.restart_tunnel(s))
         server_layout.addWidget(button)
 
@@ -117,7 +104,6 @@ class SshMonitorApp(QWidget):
         self.update_server_ui()
 
     def update_server_ui(self):
-        # Clear the grid before adding new servers
         for i in reversed(range(self.layout.count())):
             widget = self.layout.itemAt(i).widget()
             if widget is not None:
@@ -126,6 +112,7 @@ class SshMonitorApp(QWidget):
         self.add_server_button = QPushButton("Manage Servers")
         self.add_server_button.clicked.connect(self.show_add_server_dialog)
         self.layout.addWidget(self.add_server_button)
+
         for server in self.servers:
             server_widget, status_indicator, status_label = self.create_server_widget(server)
             self.layout.addWidget(server_widget)
