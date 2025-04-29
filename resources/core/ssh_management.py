@@ -11,7 +11,7 @@ def create_ssh_tunnel(server):
         "-o", "ServerAliveCountMax=5",
         server["host"]
     ]
-    subprocess.Popen(command)
+    subprocess.Popen(command, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
 
 def is_port_open(port):
